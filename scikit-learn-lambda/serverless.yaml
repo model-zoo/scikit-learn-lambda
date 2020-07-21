@@ -1,0 +1,27 @@
+# Example Serverless template for deploying a scikit-lambda.
+
+service: scikit-lambda-example
+
+provider:
+  name: aws
+  region: us-west-2
+  runtime: python3.7
+
+functions:
+  scikitLearnLambda:
+    memorySize: 1024
+    handler: scikit_learn_lambda.handler
+    layers:
+      - arn:aws:lambda:us-west-2:446751924810:layer:python-3-7-scikit-learn-0-23-1:2
+    environment:
+      # TODO: Update this environment variable to
+      SKLEARN_MODEL_PATH: "svm.joblib"
+    events:
+      - http:
+          path: predict
+          method: POST
+package:
+  exclude:
+    - "tests/**"
+    - ".tox/**"
+    - "*.egg-info/**"
