@@ -140,4 +140,9 @@ cython_debug/
 # Serverless
 .serverless
 
+# PyEnv
 .python-version
+
+# Model-related
+benchmark/
+scikit-learn-lambda/*.joblib

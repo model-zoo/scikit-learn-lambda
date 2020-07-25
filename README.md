@@ -1,9 +1,7 @@
 # scikit-lambda
 
 scikit-lambda is a toolkit for deploying scikit-learn models to an HTTP
-endpoint for realtime inference on AWS Lambda using
-[Serverless](https://github.com/serverless/serverless) or [AWS
-SAM](https://github.com/awslabs/serverless-application-model).
+endpoint for realtime inference on AWS Lambda.
 
 ## Why should I use scikit-lambda?
 
@@ -44,29 +42,18 @@ initialization. This option has no model size constraints.
 * [Install Serverless](https://www.serverless.com/framework/docs/providers/aws/guide/installation/)
 * [Configure your AWS credentials](https://www.serverless.com/framework/docs/providers/aws/guide/credentials/)
 
-#### Option A: Package the model together with your code (50 MB limit)
+#### Package your model with the code (~50 MB limit)
 
-1) Clone the repository:
+1) Copy your model pickle or joblib file to `sklearn-lambda/model.joblib`, the same
+directory that `serverless.yaml` is in.
 
-    git clone <git url> && cd <repo>
+    cp testdata/svm.joblib sklearn-lambda/model.joblib
 
-2) Copy your model pickle or joblib file to `sklearn-lambda/`, the same
-directory that `serverless.yaml` is in. For testing purposes, we've included
-some example models in `testdata/`
-
-    cp testdata/svm.joblib sklearn-lambda/
-
-3) Edit the `SKLEARN_MODEL_PATH` environment variable in `serverless.yaml` to
-specify the path of your model file, relative to the `sklearn-lambda/` directory.
-
-    environment:
-      SKLEARN_MODEL_PATH: "svm.joblib"
-
-4) Deploy your model.
+2) Deploy your model with Serverless framework.
 
     $ serverless deploy
 
-5) Test the your endpoint with some example data:
+3) Test the your endpoint with some example data:
 
     $ curl --header "Content-Type: application/json" \
       --request POST \
@@ -74,34 +61,58 @@ specify the path of your model file, relative to the `sklearn-lambda/` directory
       https://<insert your api here>.execute-api.us-west-2.amazonaws.com/dev/predict
     $ {"prediction": [0]}
 
-#### Option B: Load your model from Amazon S3
+#### Package your model via Amazon S3
 
-1) Clone the repository:
+1) Edit the environment variable `SKLEARN_MODEL_PATH` in
+`scikit-learn-lambda/serverless.yaml` to specify an s3 URL.
 
-    git clone <git url> && cd <repo>
-
-2) Upload your model to Amazon S3. For testing purposes, we've included some
-example models in `testdata/`
-
-    aws s3 cp testdata/svm.joblib s3://my-test-bucket/svm.joblib
-
-3) Edit the `SKLEARN_MODEL_PATH` environment variable in `serverless.yaml` to
-specify the location of your model file using an `s3://` scheme.
-
+```
+function:
+  scikitLearnLambda:
+    ...
     environment:
-      SKLEARN_MODEL_PATH: "s3://my-test-bucket/svm.joblib"
+      SKLEARN_MODEL_PATH: "s3://my-bucket/my-model-file.joblib"
+```
 
-4) Deploy your model.
+2) Add an IAM Role that gives the Lambda function permission to access the
+model file at the specified S3 path.
+
+```
+function:
+  scikitLearnLambda:
+    ...
+    role: ScikitLearnLambdaRole
+
+resources:
+  ScikitLearnLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ScikitLearnLambdaRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ModelInfoGetObjectPolicy-${self:custom.stage}
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ["s3:GetObject"]
+                Resource: "arn:aws:s3:::my-bucket/my-model.file.joblib"
+```
+
+3) Deploy your model with Serverless framework.
 
     $ serverless deploy
 
-5) Test the your endpoint with some example data:
+#### Customize the Python runtime version and/or scikit-learn version.
 
-    $ curl --header "Content-Type: application/json" \
-      --request POST \
-      --data '{"input":[[0, 0, 0, 0]]}' \
-      https://<insert your api here>.execute-api.us-west-2.amazonaws.com/dev/predict
-    $ {"prediction": [0]}
+TODO(yoavz):
 
 ## Layers
 
@@ -119,6 +130,10 @@ that allows you to build and upload layers owned by your own AWS account.
 
 #### Available Layers
 
+```
+TODO(yoavz): Upload and reference all the public layers.
+```
+
 #### Build your own layers
 
 `tools/build-layers.sh` is a bash script that can be used to build one or more
@@ -131,23 +146,51 @@ _Example_: Build lambda layer for Python 3.7 and scikit-learn 0.23.0.
     ./build-layers.sh 0.23.0 3.7
 
 _Example_: Build lambda layers for all combinations of Python 3.6 ~ 3.8 and
-scikit-learn libraries.
+scikit-learn versions 0.20+.
 
     ./build-layers.sh
 
-
-1)
-See `tools/build-layers.sh`
-
 ## Expected HTTP Schema
 
-Input:
+`scikit-learn-lambda` is designed to be used with [Lambda Proxy Integrations in
+API
+Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html).
+When using the provided serverless template, the HTTP endpoint will expect a
+POST request with a `Content-Type` of `application/json`.
 
-* `input`: The input array-like value. Will be fed into `model.predict`
-* `return_prediction` (default: `True`): Will return `prediction` in output if true.
-* `return_probabilities` (default: `False`): Will return `probabilities` in output if true.
+The expected input fields are:
 
-Output:
+* `input` (`string`): The list of array-like values to predict. The shape
+  should match the value that is typically fed into a `model.predict` call.
+* `return_prediction` (`boolean`): Will return `prediction` in output if true.
+  This field is optional and defaults to true.
+* `return_probabilities` (`boolean`): Will return `probabilities` in output if
+  true. This field is optional and defaults to false.
 
-* `prediction`: Array-like prediction from `model.predict()`
-* `probabilities`: Dictionary of class names to probabilities, from `model.predict_proba()`
+One of `return_prediction` or `return_probabilities` or both must be true.
+
+The return response will be JSON-encoded with the following fields:
+
+* `prediction`: A list of array-like prediction from `model.predict()`, one for
+  every sample in the batch.  Present if `return_prediction` is true.
+* `probabilities`: A list of dictionaries mapping string class names to
+  probabilities from `model.predict_proba()`, one for every sample in the
+batch. Present if `return_probabilities` is true.
+
+#### Examples
+
+```
+$ curl --header "Content-Type: application/json" \
+      --request POST \
+      --data '{"input":[[0, 0, 0, 0]]}' \
+      https://<api-id>.execute-api.us-west-2.amazonaws.com/mlp-250-250-250/predict
+{"prediction": [0]}
+```
+
+```
+$ curl --header "Content-Type: application/json" \
+      --request POST \
+      --data '{"input":[[0, 0, 0, 0]], "return_probabilities": true}' \
+      https://<api-id>.execute-api.us-west-2.amazonaws.com/mlp-250-250-250/predict
+{"prediction": [0], "probabilities": [{"0": 0.3722170997279803, "1": 0.29998954257031885, "2": 0.32779335770170076}]}
+```

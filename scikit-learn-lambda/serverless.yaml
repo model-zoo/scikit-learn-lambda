@@ -1,27 +1,73 @@
-# Example Serverless template for deploying a scikit-lambda.
+# Example Serverless template for scikit-learn-lambda.
 
-service: scikit-lambda-example
+service: scikit-learn-lambda-example
 
 provider:
   name: aws
   region: us-west-2
+
+  # Modify the runtime to python3.6, python3.7, or python3.8 here.
   runtime: python3.7
 
 functions:
   scikitLearnLambda:
+    timeout: 30
     memorySize: 1024
     handler: scikit_learn_lambda.handler
     layers:
       - arn:aws:lambda:us-west-2:446751924810:layer:python-3-7-scikit-learn-0-23-1:2
     environment:
-      # TODO: Update this environment variable to
-      SKLEARN_MODEL_PATH: "svm.joblib"
+      # Modify this to environment variable to point towards your model file.
+      # You have two options:
+      #
+      #   1) Ship your model as part of the deployment package. For this
+      #   option, this value should be the filepath of the model relative to
+      #   the directory that contains this template file.
+      #
+      #   2) Upload your model to S3 and have this function load it on
+      #   initialization. For this option, this value should be a S3 URL, e.g.
+      #   s3://modelzoo-examples/model.joblib. If you choose this option, you
+      #   should also uncomment the IAM resources below and add a custom role
+      #   to this function that gives you read access to the appropriate
+      #   bucket.
+      SKLEARN_MODEL_PATH: "model.joblib"
     events:
       - http:
           path: predict
           method: POST
+
+    # Uncomment this if loading your model from S3.
+    # role: ScikitLearnLambdaRole
+
 package:
   exclude:
     - "tests/**"
     - ".tox/**"
     - "*.egg-info/**"
+
+# Uncomment this if loading your model from S3.
+# resources:
+#   ScikitLearnLambdaRole:
+#     Type: AWS::IAM::Role
+#     Properties:
+#       RoleName: ScikitLearnLambdaRole
+#       AssumeRolePolicyDocument:
+#         Version: '2012-10-17'
+#         Statement:
+#           - Effect: Allow
+#             Principal:
+#               Service:
+#                 - lambda.amazonaws.com
+#             Action: sts:AssumeRole
+#       Policies:
+#         - PolicyName: ModelInfoGetObjectPolicy-${self:custom.stage}
+#           PolicyDocument:
+#             Version: '2012-10-17'
+#             Statement:
+#               - Effect: Allow
+#                 Action: ["s3:GetObject"]
+#                 TODO: Modify this resource ARN to the location of your model
+#                 file. See
+#                 https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-arn-format.html
+#                 for examples.
+#                 Resource: "arn:aws:s3:::modelzoo-examples/model.joblib"
