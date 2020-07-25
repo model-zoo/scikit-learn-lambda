@@ -67,7 +67,7 @@ def _get_testdata_path(filename):
 
 
 def test_invalid_request(monkeypatch, clear_cache):
-    monkeypatch.setenv("SKLEARN_MODEL_PATH", _get_testdata_path("mlp.pickle"))
+    monkeypatch.setenv("SKLEARN_MODEL_PATH", _get_testdata_path("mlp.joblib"))
     ret = handler({"body": json.dumps({"bad": "request"})}, None)
     response = json.loads(ret["body"])
     assert ret["statusCode"] == 400, response["error"]
@@ -79,8 +79,7 @@ def test_svm(monkeypatch, clear_cache):
     response = json.loads(ret["body"])
     assert ret["statusCode"] == 200, response["error"]
     assert len(response["prediction"]) == 1
-    assert isinstance(response["prediction"][0], (float, int))
-    # TODO: Verify actual prediction.
+    assert isinstance(response["prediction"][0], int)
 
 
 def test_svm_probabilities(monkeypatch, clear_cache):
@@ -89,13 +88,12 @@ def test_svm_probabilities(monkeypatch, clear_cache):
     response = json.loads(ret["body"])
     assert ret["statusCode"] == 200, response["error"]
     assert len(response["prediction"]) == 1
-    assert isinstance(response["prediction"][0], (float, int))
+    assert isinstance(response["prediction"][0], int)
     assert len(response["probabilities"]) == 1
-    assert isinstance(response["probabilities"][0], dict)
-    # TODO: Verify actual prediction.
+    assert list(response["probabilities"][0].keys()) == ["0", "1", "2"]
 
 
-def test_svm_joblib_s3(monkeypatch, clear_cache):
+def test_svm_s3(monkeypatch, clear_cache):
     monkeypatch.setenv("SKLEARN_MODEL_PATH", "s3://test-bucket/svm.joblib")
 
     with moto.mock_s3():
@@ -109,25 +107,31 @@ def test_svm_joblib_s3(monkeypatch, clear_cache):
     response = json.loads(ret["body"])
     assert ret["statusCode"] == 200, response["error"]
     assert len(response["prediction"]) == 1
-    assert isinstance(response["prediction"][0], (float, int))
-    # TODO: Verify actual prediction.
+    assert isinstance(response["prediction"][0], int)
+
+
+def test_mlp(monkeypatch, clear_cache):
+    monkeypatch.setenv("SKLEARN_MODEL_PATH", _get_testdata_path("mlp.joblib"))
+    ret = handler(apigw_event([[0] * 4]), None)
+    response = json.loads(ret["body"])
+    assert ret["statusCode"] == 200, response["error"]
+    assert len(response["prediction"]) == 1
+    assert isinstance(response["prediction"][0], int)
+
+
+def test_mlp_return_probablilities(monkeypatch, clear_cache):
+    monkeypatch.setenv("SKLEARN_MODEL_PATH", _get_testdata_path("mlp.joblib"))
+    ret = handler(apigw_event(input_data=[[0] * 4], return_probabilities=True), None)
+    response = json.loads(ret["body"])
+    assert ret["statusCode"] == 200, response["error"]
+    assert len(response["probabilities"]) == 1
+    assert list(response["probabilities"][0].keys()) == ["0", "1", "2"]
 
 
 def test_mlp_pickle(monkeypatch, clear_cache):
     monkeypatch.setenv("SKLEARN_MODEL_PATH", _get_testdata_path("mlp.pickle"))
-    ret = handler(apigw_event([[0] * 377]), None)
+    ret = handler(apigw_event([[0] * 4]), None)
     response = json.loads(ret["body"])
     assert ret["statusCode"] == 200, response["error"]
     assert len(response["prediction"]) == 1
-    assert isinstance(response["prediction"][0], str)
-    # TODO: Verify actual prediction.
-
-
-def test_mlp_return_probablilities(monkeypatch, clear_cache):
-    monkeypatch.setenv("SKLEARN_MODEL_PATH", _get_testdata_path("mlp.pickle"))
-    ret = handler(apigw_event(input_data=[[0] * 377], return_probabilities=True), None)
-    response = json.loads(ret["body"])
-    assert ret["statusCode"] == 200, response["error"]
-    assert len(response["probabilities"]) == 1
-    assert isinstance(response["probabilities"][0], dict)
-    # TODO: Verify actual prediction.
+    assert isinstance(response["prediction"][0], int)
