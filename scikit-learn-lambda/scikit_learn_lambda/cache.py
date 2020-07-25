@@ -29,10 +29,6 @@ def load_model_from_path(model_path):
 
 
 class Cache:
-    """
-    A singleton that manages loading the model.
-    """
-
     __instance = None
 
     @staticmethod

@@ -62,7 +62,7 @@ def handler(event, _):
             400,
             {
                 "error": "Must either specify return_prediction: True or "
-                "return_probabilities: True".format(body)
+                "return_probabilities: True"
             },
         )
 
