@@ -1,7 +1,7 @@
 from setuptools import find_packages, setup
 
 setup(
-    name="sklearn-lambda",
+    name="scikit-learn-lambda",
     version="0.0.1",
     author="Model Zoo, Inc.",
     install_requires=["scikit-learn", "joblib", "boto3"],

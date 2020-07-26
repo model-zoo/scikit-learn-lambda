@@ -1,13 +1,13 @@
-# scikit-lambda
+# scikit-learn-lambda
 
 [![scikit-learn-lambda](https://circleci.com/gh/model-zoo/scikit-learn-lambda.svg?style=svg)](https://app.circleci.com/pipelines/github/model-zoo/scikit-learn-lambda)
 
-scikit-lambda is a toolkit for deploying scikit-learn models to an HTTP
+scikit-learn-lambda is a toolkit for deploying scikit-learn models to an HTTP
 endpoint for realtime inference on AWS Lambda.
 
-## Why should I use scikit-lambda?
+## Why should I use scikit-learn-lambda?
 
-* **Get started quickly** - `scikit-lambda` handles the boilerplate code for you,
+* **Get started quickly** - `scikit-learn-lambda` handles the boilerplate code for you,
   simply drop in a `joblib` or `pickle` model file and deploy.
 * **Cost efficient** - The equivalent architecture on [AWS
   SageMaker](https://aws.amazon.com/sagemaker/) will cost you ~$50 per endpoint.
@@ -20,13 +20,14 @@ endpoint for realtime inference on AWS Lambda.
 
 ## Overview
 
-scikit-lambda provides three components that can
+scikit-learn-lambda provides three components:
 
-1) `scikit-lambda`: A Python package that includes a handler for AWS Lambda
-   that loads a `scikit-learn` model into memory and returns predictions.
+1) `scikit-learn-lambda`: A Python package that includes a handler for serving
+   `scikit-learn` predictions via AWS Lambda, designed for use with API Gateway.
 2) A repository of Lambda layers for varous combinations of Python (3.6 - 3.8)
    and `scikit-learn` (0.20 - 0.23).
-3) Example template configurations for deploying a model to an HTTP endpoint.
+3) Example Serverless template configuration for deploying a model to an HTTP
+   endpoint.
 
 ## Quickstart (Serverless)
 
