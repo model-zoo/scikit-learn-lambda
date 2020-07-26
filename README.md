@@ -1,5 +1,7 @@
 # scikit-lambda
 
+[![scikit-learn-lambda](https://circleci.com/gh/model-zoo/scikit-learn-lambda.svg?style=svg)](https://app.circleci.com/pipelines/github/model-zoo/scikit-learn-lambda)
+
 scikit-lambda is a toolkit for deploying scikit-learn models to an HTTP
 endpoint for realtime inference on AWS Lambda.
 
