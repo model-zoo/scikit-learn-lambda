@@ -5,7 +5,7 @@
 scikit-learn-lambda is a toolkit for deploying scikit-learn models to an HTTP
 endpoint for realtime inference on AWS Lambda.
 
-## Why should I use scikit-learn-lambda?
+## Why use scikit-learn-lambda?
 
 * **Get started quickly** - `scikit-learn-lambda` handles the boilerplate code for you,
   simply drop in a `joblib` or `pickle` model file and deploy.
@@ -234,3 +234,19 @@ $ curl --header "Content-Type: application/json" \
       https://<api-id>.execute-api.us-west-2.amazonaws.com/mlp-250-250-250/predict
 {"prediction": [0], "probabilities": [{"0": 0.3722170997279803, "1": 0.29998954257031885, "2": 0.32779335770170076}]}
 ```
+
+## Performance Benchmarks
+
+To run these benchmarks, we generate [MLPClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html) models with three hidden layers each using layer sizes of 100, 250, 500, 750, and 900. Each model is trained on the iris dataset and serialized using [joblib](https://joblib.readthedocs.io/en/latest/index.html). This results in model files sized 0.68 MB, 4.08 MB, 16.17 MB, 36.25 MB, and 52.13 MB respectively. We deploy each to a lambda function with 1024 MB memory and measure an average cold-start latency over three samples:
+
+![](cold-start-benchmarks.png)
+
+We also plot the “warm” latency below averaged over fifteen samples for each model:
+
+![](warm-start-benchmarks.png)
+
+## Cost Benchmarks
+
+[https://modelzoo.dev/lambda-vs-sagemaker-cost/](https://modelzoo.dev/lambda-vs-sagemaker-cost/)
+
+We've created this interactive visualization to help us understand the cost per month under various usage scenarios. It also includes a comparison to SageMaker inference endpoint costs.
