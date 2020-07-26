@@ -4,14 +4,13 @@ orbs:
   python: circleci/python@0.3.0
 
 jobs:
-  # lint:
-  #   docker:
-  #     - image: circleci/python:3.7
-  #   steps:
-  #     - checkout
-  #     - run: pip install tox
-  #     - run: tox -c api -e check
-  #     - run: tox -c client -e check
+  lint:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - run: pip install tox
+      - run: tox -c scikit-learn-lambda -e check
 
   test-py36:
     docker:
@@ -40,6 +39,7 @@ jobs:
 workflows:
   test:
     jobs:
+      - lint
       - test-py36
       - test-py37
       - test-py38
