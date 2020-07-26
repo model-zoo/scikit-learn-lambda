@@ -32,11 +32,11 @@ scikit-lambda provides three components that can
 
 You have two options for deploying a model with Serverless framework.
 
-A) Package your model as part of the deployment package upload to AWS Lambda.
+* Package your model as part of the deployment package upload to AWS Lambda.
 This option will require your model file to be under ~50 MB, but achieve the best
 cold-start latency.
 
-B) Store your model into Amazon S3 and load it from there on AWS Lambda
+* Store your model into Amazon S3 and load it from there on AWS Lambda
 initialization. This option has no model size constraints.
 
 #### Prerequisites
@@ -46,22 +46,28 @@ initialization. This option has no model size constraints.
 
 #### Package your model with the code (~50 MB limit)
 
-1) Copy your model pickle or joblib file to `sklearn-lambda/model.joblib`, the same
+1) Copy your model joblib file to `scikit-learn-lambda/model.joblib`, the same
 directory that `serverless.yaml` is in.
 
-    cp testdata/svm.joblib sklearn-lambda/model.joblib
+```
+$ cp testdata/svm.joblib scikit-learn-lambda/model.joblib
+```
 
 2) Deploy your model with Serverless framework.
 
-    $ serverless deploy
+```
+$ serverless deploy
+```
 
 3) Test the your endpoint with some example data:
 
-    $ curl --header "Content-Type: application/json" \
-      --request POST \
-      --data '{"input":[[0, 0, 0, 0]]}' \
-      https://<insert your api here>.execute-api.us-west-2.amazonaws.com/dev/predict
-    $ {"prediction": [0]}
+```
+$ curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"input":[[0, 0, 0, 0]]}' \
+  https://<insert your api here>.execute-api.us-west-2.amazonaws.com/dev/predict
+$ {"prediction": [0]}
+```
 
 #### Package your model via Amazon S3
 
@@ -110,11 +116,38 @@ resources:
 
 3) Deploy your model with Serverless framework.
 
-    $ serverless deploy
+```
+$ serverless deploy
+```
 
-#### Customize the Python runtime version and/or scikit-learn version.
+#### Customize the Python runtime version or scikit-learn version.
 
-TODO(yoavz):
+It is a good idea to match your Python version and scikit-learn version with
+the environment that was used to train and serialize the model.
+
+The default template is configured to use *Python 3.7* and *scikit-learn
+0.23.1*. To use a different version, change the layer ARN in the serverless
+template. We have prebuilt and published a set of AWS Lambda you can get
+started with quickly. For production usage, we recommend that you use our
+provided scripts to build and host your own AWS Lambda layer -- see
+[Layers](#layers).
+
+```
+function:
+  scikitLearnLambda:
+    ...
+    layers:
+      - "<layer ARN including version number>"
+```
+
+When changing the Python runtime version, make sure to also edit the `runtime`
+in `serverless`:
+
+```
+provider:
+  ...
+  runtime: "<python3.6, python3.7, or python3.8>"
+```
 
 ## Layers
 
@@ -124,7 +157,7 @@ it is useful to create a distinct layer for the `scikit-learn` dependency. This
 frees up more room in your deployment package for your model or other
 dependencies.
 
-`sklearn-lambda` comes with a pre-built set of AWS Lambda layers that include
+`scikit-learn-lambda` comes with a pre-built set of AWS Lambda layers that include
 `scikit-learn` and `joblib` that you can use out of the box on `us-west-2`.
 These layers are hosted on the Model Zoo AWS account  with public permissions
 for any AWS account to use. We also provide a script `tools/build-layers.sh`
