@@ -90,11 +90,11 @@ do
                 --zip-file "fileb://${BUILD_CACHE_DIR}/${zip_name}" \
                 --compatible-runtimes "python${p}" \
                 --license-info MIT)
-            layer_arn=$(echo ${layer_version_info} | jq ".LayerArn")
+            layer_arn=$(echo ${layer_version_info} | jq -r ".LayerArn")
 
             echo "Created layer: ${layer_version_info}"
             if [ "${PUBLIC}" = true ]; then
-                layer_version_number=$(echo ${layer_version_info} | jq ".Version")
+                layer_version_number=$(echo ${layer_version_info} | jq -r ".Version")
                 layer_version_policy=$(aws lambda add-layer-version-permission \
                     --region "${r}" \
                     --layer-name ${layer_name} \
@@ -105,7 +105,7 @@ do
                 echo "Added layer version policy: ${layer_version_policy}"
             fi
 
-            echo "${p},${s},${r},${layer_arn}" >> "${OUTPUT_CSV}"
+            echo "${p},${s},${r},${layer_arn}:${layer_version_number}" >> "${OUTPUT_CSV}"
         done
 
         # Clean out cache for the next layer.

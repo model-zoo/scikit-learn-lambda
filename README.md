@@ -11,7 +11,7 @@ endpoint for realtime inference on AWS Lambda.
   simply drop in a `joblib` or `pickle` model file and deploy.
 * **Cost efficient** - The equivalent architecture on [AWS
   SageMaker](https://aws.amazon.com/sagemaker/) will cost you ~$50 per endpoint.
-  Deploying on AWS lambda allows you to pay-per-request and not worry about
+  Deploying on AWS Lambda allows you to pay-per-request and not worry about
   the number of models you're deploying to production.
 * **Built-in autoscaling** - Deploying on [Elastic Container
   Service](https://aws.amazon.com/ecs/) or [Kubernetes](https://kubernetes.io/)
@@ -24,8 +24,8 @@ scikit-learn-lambda provides three components:
 
 1) `scikit-learn-lambda`: A Python package that includes a handler for serving
    `scikit-learn` predictions via AWS Lambda, designed for use with API Gateway.
-2) A repository of Lambda layers for varous combinations of Python (3.6 - 3.8)
-   and `scikit-learn` (0.20 - 0.23).
+2) A repository of Lambda layers for various versions of Python (3.6 - 3.8)
+   and `scikit-learn` (0.22+).
 3) Example Serverless template configuration for deploying a model to an HTTP
    endpoint.
 
@@ -164,25 +164,29 @@ These layers are hosted on the Model Zoo AWS account  with public permissions
 for any AWS account to use. We also provide a script `tools/build-layers.sh`
 that allows you to build and upload layers owned by your own AWS account.
 
-#### Available Layers
+#### Prebuilt Layers
 
-```
-TODO(yoavz): Upload and reference all the public layers.
-```
+We have published a set of layers for combinations of Python 3.6 - 3.8 and
+scikit-learn 0.22 - 0.24 to different US regions. These are published to
+`layers.csv`:
+
+[`layers.csv`](https://github.com/model-zoo/scikit-learn-lambda/blob/master/layers.csv)
 
 #### Build your own layers
 
 `tools/build-layers.sh` is a bash script that can be used to build one or more
 AWS Lambda Layers with the `scikit-learn` and `joblib` dependencies.
 
-_This script assumes you have Docker and the AWS cli installed on your machine._
+_This script assumes you have jq, Docker, and the AWS cli installed on your machine._
 
-_Example_: Build lambda layer for Python 3.7 and scikit-learn 0.23.0.
+**Example 1**: Build layer for Python 3.7 and scikit-learn 0.23.0.
 
-    ./build-layers.sh 0.23.0 3.7
+    ./build-layers.sh --scikit-learn=0.23.0 --python=3.7
 
-_Example_: Build lambda layers for all combinations of Python 3.6 ~ 3.8 and
-scikit-learn versions 0.20+.
+**Example 2**: Build layer for Python 3.7 and scikit-learn 0.23.0 and
+publish to us-west-2.
+
+     ./build-layers.sh --python=3.7 --scikit-learn==0.23.0 --region=us-west-2
 
     ./build-layers.sh
 
