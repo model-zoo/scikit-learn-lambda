@@ -1,0 +1,45 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@0.3.0
+
+jobs:
+  # lint:
+  #   docker:
+  #     - image: circleci/python:3.7
+  #   steps:
+  #     - checkout
+  #     - run: pip install tox
+  #     - run: tox -c api -e check
+  #     - run: tox -c client -e check
+
+  test-py36:
+    docker:
+      - image: circleci/python:3.6
+    steps:
+      - checkout
+      - run: pip install tox
+      - run: tox -c scikit-learn-lambda -e py36
+
+  test-py37:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - run: pip install tox
+      - run: tox -c scikit-learn-lambda -e py37
+
+  test-py38:
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - checkout
+      - run: pip install tox
+      - run: tox -c scikit-learn-lambda -e py38
+
+workflows:
+  test:
+    jobs:
+      - test-py36
+      - test-py37
+      - test-py38
