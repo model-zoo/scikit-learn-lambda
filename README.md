@@ -18,6 +18,8 @@ endpoint for realtime inference on AWS Lambda.
   requires configuring and maintaining autoscaling groups. AWS Lambda abstracts
   this complexity away for you.
 
+Read more in our blogpost: [Saving 95% on infrastructure costs using AWS Lambda for scikit-learn predictions](https://modelzoo.dev/blog/lambda.html).
+
 ## Overview
 
 scikit-learn-lambda provides three components:
