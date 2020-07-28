@@ -9,7 +9,7 @@ scikit-learn-lambda is a toolkit for deploying scikit-learn models for realtime 
 * **Get started quickly** - `scikit-learn-lambda` handles the boilerplate code for you,
   simply drop in a `joblib` or `pickle` model file and deploy.
 * **Cost efficient** - The equivalent architecture on [AWS
-  SageMaker](https://aws.amazon.com/sagemaker/) will cost you ~$50 per endpoint.
+  SageMaker](https://aws.amazon.com/sagemaker/) will cost you ~$50 per endpoint per month.
   Deploying on AWS Lambda allows you to pay-per-request and not worry about
   the number of models you're deploying to production.
 * **Built-in autoscaling** - Deploying on [Elastic Container
