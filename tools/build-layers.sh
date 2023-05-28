@@ -75,7 +75,7 @@ do
         echo "Building layer for python $p and scikit-learn $s..."
         docker run \
             -v ${SCRIPT_DIR}:/var/task \
-            "lambci/lambda:build-python$p" \
+            "public.ecr.aws/sam/build-python$p:latest" \
             /var/task/install-pip-packages.sh "scikit-learn==${s} joblib" /var/task/build/python/lib/python${p}/site-packages
 
         layer_name=$(echo "python-${p}-scikit-learn-${s}" | tr '.' '-')
